@@ -64,7 +64,6 @@
 ;;; To Do **************************
 ;;; ********************************
 ;;;
-;;;    - Need get-cons for Allegro, AKCL.
 ;;;    - Speed up monitoring code. Replace use of hash tables with an embedded
 ;;;      offset in an array so that it will be faster than using gethash. 
 ;;;      (i.e., svref/closure reference is usually faster than gethash).
@@ -82,27 +81,10 @@
 ;;; ********************************
 ;;;
 ;;;    METERING has been tested (successfully) in the following lisps:
-;;;       CMU Common Lisp (16d, Python Compiler 1.0 ) :new-compiler
-;;;       CMU Common Lisp (M2.9 15-Aug-90, Compiler M1.8 15-Aug-90) 
-;;;       Macintosh Allegro Common Lisp (1.3.2)
-;;;       Macintosh Common Lisp (2.0)
-;;;       ExCL (Franz Allegro CL 3.1.12 [DEC 3100] 11/19/90) :allegro-v3.1
-;;;       ExCL (Franz Allegro CL 4.0.1 [Sun4] 2/8/91)       :allegro-v4.0
-;;;       ExCL (Franz Allegro CL 4.1 [SPARC R1] 8/28/92 14:06) :allegro-v4.1
-;;;       Lucid CL (Version 2.1 6-DEC-87)
-;;;       Lucid Common Lisp (3.0)
-;;;       Lucid Common Lisp (4.0.1 HP-700 12-Aug-91)
-;;;       AKCL (1.86, June 30, 1987 or later)
-;;;       Ibuki Common Lisp (Version 2, release 01.027)
 ;;;       CLISP (January 1994)
 ;;;
 ;;;    METERING needs to be tested in the following lisps:
-;;;       Symbolics Common Lisp (8.0)
-;;;       KCL (June 3, 1987 or later)
-;;;       TI (Release 4.1 or later)
-;;;       Golden Common Lisp (3.1 IBM-PC)
-;;;       VAXLisp (2.0, 3.1)
-;;;       Procyon Common Lisp
+;;;       CLISP (2.49+)
 
 ;;; ****************************************************************
 ;;; Documentation **************************************************
@@ -336,29 +318,7 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; Fix up the *features* list *****
 ;;; ********************************
 
-(eval-when (compile load eval)
-  ;; The *features* list for Macintosh Allegro Common Lisp 1.3.2
-  ;; isn't really unambiguous, so we add the :mcl1.3.2 feature.
-  (when (or (and (string-equal (lisp-implementation-type)
-			       "Macintosh Allegro Common Lisp")
-		 (string-equal (lisp-implementation-version)
-			       "1.3.2"))
-	    (and (find :ccl *features*)
-		 (not (find :lispworks *features*))
-		 (not (find :mcl *features*))))
-    (pushnew :mcl1.3.2 *features*))
-  ;; We assume that :mcl means version 2.0 or greater. If it doesn't,
-  ;; use :mcl2.0 which is defined by:
-  (when (or (and (string-equal (lisp-implementation-type)
-			       "Macintosh Common Lisp")
-		 (string-equal (lisp-implementation-version)
-			       "Version 2.0"))
-	    (and (find :ccl *features*)
-		 (find :ccl-2 *features*)
-		 (not (find :lispworks *features*))
-		 (find :mcl *features*)))
-    (pushnew :mcl2.0 *features*))
-  )
+(eval-when (compile load eval) #| nothing to fix |# )
 
 ;;; ********************************
 ;;; Packages ***********************
@@ -411,11 +371,7 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; to seconds.
 
 (progn
-  #-(or :cmu 
-        :clisp
-	:allegro-v3.1 :allegro-v4.0 :allegro-v4.1
-	:mcl :mcl1.3.2
-	:lcl3.0 :lcl4.0)
+  #-(or :cmu :clisp :clozure :allegro)
   (eval-when (compile eval)
     (warn
      "You may want to supply implementation-specific get-time functions."))
@@ -425,20 +381,6 @@ Estimated total monitoring overhead: 0.88 seconds
   (defmacro get-time ()
     `(the time-type (get-internal-run-time)))
 )
-
-;;; NOTE: In Macintosh Common Lisp, CCL::GCTIME returns the number of
-;;;       milliseconds spent during GC. We could subtract this from
-;;;       the value returned by get-internal-run-time to eliminate
-;;;       the effect of GC on the timing values, but we prefer to let
-;;;       the user run without GC on. If the application is so big that
-;;;       it requires GC to complete, then the GC times are part of the
-;;;       cost of doing business, and will average out in the long run.
-;;;       If it seems really important to a user that GC times not be 
-;;;       counted, then uncomment the following three lines and read-time
-;;;       conditionalize the definition of get-time above with #-:mcl.
-;#+:mcl 
-;(defmacro get-time () 
-;  `(the time-type (- (get-internal-run-time) (ccl:gctime))))
 
 ;;; ********************************
 ;;; Consing Functions **************
@@ -462,134 +404,18 @@ Estimated total monitoring overhead: 0.88 seconds
     (declare (ignore real1 real2 run1 run2 gc1 gc2 gccount))
     (dpb space1 (byte 24 24) space2)))
 
-;;; Lucid. 4 bytes/word. This returns bytes.
-;;; For some reason this doesn't work properly under Lucid 4.0, but
-;;; that's OK, because they have PC-based profiling which is more accurate.
-#+(or :lcl3.0 :lcl4.0)
-(defmacro get-cons () `(the consing-type (gc-size)))
-
-;;; Allegro V4.0/1. SYS::GSGC-MAP takes one argument, and returns an
-;;; array representing the memory state.
-#+(or :allegro-v4.0 :allegro-v4.1)
-(defvar *gc-space-array* (make-array 4 :element-type '(unsigned-byte 32)))
-#+(or :allegro-v4.0 :allegro-v4.1)
-(defun bytes-consed ()
-  (system:gsgc-totalloc *gc-space-array* t)
-  (aref *gc-space-array* 0))
-
-#+:allegro-v3.1
-(defun bytes-consed ()
-  (let ((gs (sys::gsgc-map)))
-    (+ (aref gs 3)			; new space
-       (let ((sum 0))			; old space
-	 (dotimes (i (1+ (floor (/ (- (length gs) 13) 10))))
-	   (incf sum (aref gs (+ (* i 10) 13))))
-	 sum)))
-  )
-
-#+(or :allegro-v3.1 :allegro-v4.0 :allegro-v4.1)
-(defmacro get-cons () `(the consing-type (bytes-consed)))
-
-;;; Macintosh Allegro Common Lisp 1.3.2
-;;; Based on CCL's sample code for memory usage.
-;;; They key trick here is that we maintain the information about total
-;;; consing since time zero by keeping track of how much memory was free
-;;; before and after gc (by advising gc). Luckily, MACL's garbage collection
-;;; seems to always be invoked internally by calling GC.
-;;;
-;;; Maybe instead of showing bytes consed since time zero, we should
-;;; return bytes consed since the first time the function is called?
-;;; And the first time the function is called, it should set the
-;;; value to zero. No real need to do this -- what we have works fine,
-;;; and involves less code.
-#+:mcl1.3.2
-(in-package :ccl)
-
-#+:mcl1.3.2
-(defvar *bytes-consed-chkpt* 0)
-
-#+:mcl1.3.2
-(defun reset-consing () (setq *bytes-consed-chkpt* 0))
-
-(eval-when (eval compile)
-  #+:mcl1.3.2(defconstant $currentA5 #x904)
-  #+:mcl1.3.2(defconstant $pagecounts #x-18e)
-  #+:mcl1.3.2(defconstant $lstFP #x-a42)
-  #+:mcl1.3.2(defconstant $consfirstob 64)
-  #+:mcl1.3.2(defconstant $pagesize 4096))
-
-#+:mcl1.3.2
-(let ((old-gc (symbol-function 'gc))
-      (ccl:*warn-if-redefine-kernel* nil))
-  (setf (symbol-function 'gc)
-        #'(lambda ()
-            (let ((old-consing (total-bytes-consed)))
-              (prog1
-                (funcall old-gc)
-                (incf *bytes-consed-chkpt*
-		      (- old-consing (total-bytes-consed))))))))
-
-#+:mcl1.3.2
-(defun total-bytes-consed (&aux pages fp)
-  "Returns number of conses (8 bytes each)"
-  (let* ((a5 (%get-ptr $currentA5))
-         (ptr (%inc-ptr a5 $pagecounts)))
-    (%ilsr 3 (%i+ (%i- (%ilsl 12 (%i- (setq pages (%get-word ptr 0)) 1))
-		       (%i* pages $consfirstob))
-                   (if (eq 0 (setq fp (%get-long a5 $lstFP)))
-		       $pagesize
-		     (%ilogand2 #xfff fp))))))
-
-#+:mcl1.3.2
-(in-package "MONITOR")
-
-#+:mcl1.3.2
-(defun get-cons ()
-  (the consing-type (+ (ccl::total-bytes-consed) ccl::*bytes-consed-chkpt*)))
-
-;;; Macintosh Common Lisp 2.0
-;;; Note that this includes bytes that were allocated during GC.
-;;; We could subtract this out by advising GC like we did under
-;;; MCL 1.3.2, but I'd rather users ran without GC. If they can't
-;;; run without GC, then the bytes consed during GC are a cost of
-;;; running their program. Metering the code a few times will
-;;; avoid the consing values being too lopsided. If a user really really
-;;; wants to subtract out the consing during GC, replace the following
-;;; two lines with the commented out code.
-#+:mcl
+;;; Clozure Common Lisp
+;;; Note that this includes bytes that were allocated during GC.  We
+;;; could subtract this out by advising GC, but I'd rather users ran
+;;; without GC. If they can't run without GC, then the bytes consed
+;;; during GC are a cost of running their program. Metering the code a
+;;; few times will avoid the consing values being too lopsided. If a
+;;; user really really wants to subtract out the consing during GC,
+;;; replace the following two lines with the commented out code.
+#+:clozure
 (defmacro get-cons () `(the consing-type (ccl::total-bytes-allocated)))
-;#+:mcl
-;(in-package :ccl)
-;#+:mcl
-;(defvar *bytes-consed-chkpt* 0)
-;#+:mcl
-;(defun reset-consing () (setq *bytes-consed-chkpt* 0))
-;#+:mcl
-;(let ((old-gc (symbol-function 'gc))
-;      (ccl:*warn-if-redefine-kernel* nil))
-;  (setf (symbol-function 'gc)
-;	#'(lambda ()
-;	    (let ((old-consing (total-bytes-consed)))
-;	      (prog1
-;		(funcall old-gc)
-;		(incf *bytes-consed-chkpt*
-;		      (- old-consing (total-bytes-consed))))))))
-;#+:mcl
-;(defun total-bytes-consed ()
-;  "Returns number of conses (8 bytes each)"
-;  (ccl::total-bytes-allocated))
-;#+:mcl
-;(in-package "MONITOR")
-;#+:mcl
-;(defun get-cons ()
-;  (the consing-type (+ (ccl::total-bytes-consed) ccl::*bytes-consed-chkpt*)))
 
-
-#-(or :cmu 
-      :clisp
-      :lcl3.0 :lcl4.0 
-      :allegro-v3.1 :allegro-v4.0 :allegro-v4.1
-      :mcl1.3.2 :mcl)
+#-(or :cmu :clisp :clozure)
 (progn
   (eval-when (compile eval)
     (warn "No consing will be reported unless a get-cons function is ~
@@ -667,13 +493,12 @@ Estimated total monitoring overhead: 0.88 seconds
 			 t nil))))))
 )
 
-;;; Lucid, Allegro, and Macintosh Common Lisp
-#+(OR :lcl3.0 :lcl4.0 :excl :mcl) 
+;;; Allegro and Clozure Common Lisp
+#+(or allegro clozure)
 (defun required-arguments (name)
   (let* ((function (symbol-function name))
-         (args #+:excl(excl::arglist function)
-	       #+:mcl(ccl:arglist function)
-	       #-(or :excl :mcl)(arglist function))
+         (args #+:allegro(excl::arglist function)
+	       #+:clozure(ccl:arglist function))
          (pos (position-if #'(lambda (x)
                                (and (symbolp x)
                                     (let ((name (symbol-name x)))
@@ -683,30 +508,7 @@ Estimated total monitoring overhead: 0.88 seconds
                            args)))
     (if pos
         (values pos t)
-        (values (length args) nil))))
-
-;;; Macintosh Allegro Common Lisp version 1.3.2
-#+:mcl1.3.2
-(defun required-arguments (name)
-  (let ((arguments-string
-         (let ((the-string
-                (with-output-to-string (*standard-output*)
-		    (ccl:arglist-to-stream name *standard-output*))))
-           (cond ((and (>=  (length the-string) 23)
-                       (string-equal (subseq the-string 0 22)
-                                     "Can't find arglist for")) nil)
-                 ((position  #\( the-string :test 'char-equal) the-string)
-                 (T  (concatenate 'string "(" the-string ")"))))))
-    (if (null arguments-string)
-	(values 0 t)
-      (let* ((pos (position #\& arguments-string))
-             (args (length (read-from-string
-                            (concatenate 'string
-					 (subseq arguments-string 0 pos)
-					 ")")))))
-        (if pos
-	    (values args t)
-          (values args nil))))))
+      (values (length args) nil))))
 
 #+:clisp
 (defun required-arguments (name)
@@ -735,15 +537,15 @@ Estimated total monitoring overhead: 0.88 seconds
 	     (values 0 t))))
       (T (values 0 t)))))
 
-#-(or :cmu :clisp :lcl3.0 :lcl4.0 :mcl1.3.2 :mcl :excl)
+#-(or :cmu :clisp :clozure :allegro)
 (progn
- (eval-when (compile eval)
-   (warn
-    "You may want to add an implementation-specific Required-Arguments function."))
- (eval-when (load eval)
-   (defun required-arguments (name)
-     (declare (ignore name))
-     (values 0 t))))
+  (eval-when (compile eval)
+    (warn
+     "You may want to add an implementation-specific Required-Arguments function."))
+  (eval-when (load eval)
+    (defun required-arguments (name)
+      (declare (ignore name))
+      (values 0 t))))
 
 #|
 ;;;Examples
