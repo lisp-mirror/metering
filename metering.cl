@@ -14,17 +14,14 @@
 ;;;   o  the Monitor package written by Chris McConnell
 ;;;   o  the Profile package written by Skef Wholey and Rob MacLachlan
 ;;; The two systems were merged and extended by Mark Kantrowitz.
+;;; Metering System was refreshed and adaptated to the 2016 realities
+;;; by Daniel Kochmański.
 ;;; 
-;;; Address: Carnegie Mellon University
-;;;          School of Computer Science
-;;;          Pittsburgh, PA 15213
-;;;
 ;;; This code is in the public domain and is distributed without warranty
 ;;; of any kind. 
 ;;;
-;;; Bug reports, comments, and suggestions should be sent to mkant@cs.cmu.edu.
-;;; 
-;;; 
+;;; Bug reports, comments, and suggestions should be sent to
+;;; daniel@turtleware.eu.
 
 ;;; ********************************
 ;;; Change Log *********************
@@ -58,7 +55,9 @@
 ;;; 01-JAN-93 mk  v2.0  Support for MCL 2.0, CMU CL 16d, Allegro V3.1/4.0/4.1, 
 ;;;                     Lucid 4.0, ibcl
 ;;; 25-JAN-94 mk  v2.1  Patches for CLISP from Bruno Haible.
-
+;;; 13-MAR-16 dk  v3.0  General clean-up - removal of the obsolete
+;;;                     implementations support and constructs, testing on
+;;;                     the active implementations etc.
 ;;;
 
 ;;; ********************************
@@ -76,8 +75,7 @@
 ;;;      sum recursive calls.
 ;;;    - Add option to record caller statistics -- this would list who
 ;;;      called which functions and how often.
-;;;    - switches to turn timing/CONSING statistics collection on/off.
-
+;;;    - Switches to turn timing/CONSING statistics collection on/off.
 
 ;;; ********************************
 ;;; Notes **************************
@@ -105,7 +103,6 @@
 ;;;       Golden Common Lisp (3.1 IBM-PC)
 ;;;       VAXLisp (2.0, 3.1)
 ;;;       Procyon Common Lisp
-
 
 ;;; ****************************************************************
 ;;; Documentation **************************************************
@@ -363,53 +360,13 @@ Estimated total monitoring overhead: 0.88 seconds
     (pushnew :mcl2.0 *features*))
   )
 
-;;; Let's be smart about CLtL2 compatible Lisps:
-(eval-when (compile load eval)
-  #+(or (and :excl (or :allegro-v4.0 :allegro-v4.1)) 
-	:mcl
-	(and :cmu :new-compiler))
-  (pushnew :cltl2 *features*))
-
 ;;; ********************************
 ;;; Packages ***********************
 ;;; ********************************
 
-#-:cltl2
-(in-package "MONITOR" :nicknames '("MON"))
-
-;;; For CLtL2 compatible lisps
-
-#+(and :excl (or :allegro-v4.0 :allegro-v4.1))
-(defpackage "MONITOR" (:nicknames "MON") (:use "COMMON-LISP") 
-  (:import-from cltl1 provide require))
-#+:mcl                                  
-(defpackage "MONITOR" (:nicknames "MON") (:use "COMMON-LISP") 
-  (:import-from ccl provide require))
-#+(and :cmu :new-compiler)
 (defpackage "MONITOR" (:nicknames "MON") (:use "COMMON-LISP"))
-#+(and :cltl2
-       (not (or (and :excl (or :allegro-v4.0 :allegro-v4.1))
-		:mcl
-		(and :cmu :new-compiler))))   
-(unless (find-package "MONITOR") 
-  (make-package "MONITOR" :nicknames '("MON") :use '("COMMON-LISP")))
-
-#+:cltl2
 (in-package "MONITOR")
 
-
-#+(and :excl :allegro-v4.0)
-(cltl1:provide "monitor")
-#+(and :excl :allegro-v4.1)
-(provide "monitor")
-#+:mcl
-(ccl:provide "monitor")
-#+(and :cltl2
-       (not (or (and :excl (or :allegro-v4.0 :allegro-v4.1))
-		:mcl
-		(and :cmu :new-compiler))))
-(provide "monitor")
-#-:cltl2
 (provide "monitor")
 
 (export '(*monitored-functions*
@@ -430,7 +387,7 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; Version ************************
 ;;; ********************************
 
-(defparameter *metering-version* "v2.1 25-JAN-94"
+(defparameter *metering-version* "v3.0 13-MAR-16"
   "Current version number/date for Metering.")
 
 
@@ -443,16 +400,8 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; ********************************
 
 (eval-when (compile load eval)
-  #+(and :cmu :new-compiler)
-  (deftype time-type () '(unsigned-byte 29))
-  #+(and :cmu :new-compiler)
-  (deftype consing-type () '(unsigned-byte 29))
-  #-(and :cmu :new-compiler)
   (deftype time-type () 'unsigned-byte)
-  #-(and :cmu :new-compiler)
-  (deftype consing-type () 'unsigned-byte)
-
-  )
+  (deftype consing-type () 'unsigned-byte))
 
 ;;; ********************************
 ;;; Timing Functions ***************
@@ -463,7 +412,7 @@ Estimated total monitoring overhead: 0.88 seconds
 
 (progn
   #-(or :cmu 
-        CLISP
+        :clisp
 	:allegro-v3.1 :allegro-v4.0 :allegro-v4.1
 	:mcl :mcl1.3.2
 	:lcl3.0 :lcl4.0)
@@ -506,7 +455,7 @@ Estimated total monitoring overhead: 0.88 seconds
 ;  #+:new-compiler
   '(the consing-type (ext:get-bytes-consed)))
 
-#+CLISP
+#+:clisp
 (defun get-cons ()
   (multiple-value-bind (real1 real2 run1 run2 gc1 gc2 space1 space2 gccount)
       (sys::%%time)
@@ -637,7 +586,7 @@ Estimated total monitoring overhead: 0.88 seconds
 
 
 #-(or :cmu 
-      CLISP
+      :clisp
       :lcl3.0 :lcl4.0 
       :allegro-v3.1 :allegro-v4.0 :allegro-v4.1
       :mcl1.3.2 :mcl)
@@ -759,7 +708,7 @@ Estimated total monitoring overhead: 0.88 seconds
 	    (values args t)
           (values args nil))))))
 
-#+CLISP
+#+:clisp
 (defun required-arguments (name)
   (let ((function (symbol-function name)))
     (case (type-of function)
@@ -786,7 +735,7 @@ Estimated total monitoring overhead: 0.88 seconds
 	     (values 0 t))))
       (T (values 0 t)))))
 
-#-(or :cmu CLISP :lcl3.0 :lcl4.0 :mcl1.3.2 :mcl :excl) 
+#-(or :cmu :clisp :lcl3.0 :lcl4.0 :mcl1.3.2 :mcl :excl)
 (progn
  (eval-when (compile eval)
    (warn
