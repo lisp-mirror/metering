@@ -449,7 +449,7 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; Allegro and Clozure Common Lisp
 #+(or allegro clozure)
 (defun required-arguments (name)
-  (let* ((function (symbol-function name))
+  (let* ((function (fdefinition name))
          (args #+:allegro(excl::arglist function)
 	       #+:clozure(ccl:arglist function))
          (pos (position-if #'(lambda (x)
@@ -465,7 +465,7 @@ Estimated total monitoring overhead: 0.88 seconds
 
 #+:clisp
 (defun required-arguments (name)
-  (let ((function (symbol-function name)))
+  (let ((function (fdefinition name)))
     (case (type-of function)
       (FUNCTION
        (if (compiled-function-p function)
@@ -513,23 +513,6 @@ Estimated total monitoring overhead: 0.88 seconds
 (required-arguments 'test2) => 2 t
 |#
 
-;;; ********************************
-;;; Fdefinition ********************
-;;; ********************************
-;;; fdefinition is a CLtL2 addition. 
-#+(and :cmu (not (or new-compiler :new-compiler)))
-(eval-when (compile eval)
-  ;; Need to worry about extensions:encapsulate in CMU CL
-  ;; Note: We should really be defining fdefinition as a function
-  ;; in the "LISP" package and export it. But this will do for now,
-  ;; especially since we only define it while compiling this code.
-  ;; The use of (fboundp 'fdefinition) later in this file works
-  ;; because (fboundp <macro>) returns t.
-  ;; (export 'lisp::fdefinition "LISP")
-  (defmacro fdefinition (x)
-    `(lisp::careful-symbol-function ,x))
-  (defsetf fdefinition lisp::set-symbol-function-carefully))
-
 
 ;;; ****************************************************************
 ;;; Main METERING Code *********************************************
@@ -562,43 +545,15 @@ Estimated total monitoring overhead: 0.88 seconds
   "Return the function found at FUNCTION-PLACE. Evals FUNCTION-PLACE
 if it isn't a symbol, to allow monitoring of closures located in
 variables/arrays/structures."
-  ;; Note that (fboundp 'fdefinition) returns T even if fdefinition
-  ;; is a macro, which is what we want.
-  (if (fboundp 'fdefinition)
-      `(if (fboundp ,function-place)
-	   (fdefinition ,function-place)
-	   (eval ,function-place))
-      `(if (symbolp ,function-place)
-	   (symbol-function ,function-place)
-	   (eval ,function-place))))
+  `(if (fboundp ,function-place)
+       (fdefinition ,function-place)
+       (eval ,function-place)))
 
 (defsetf PLACE-FUNCTION (function-place) (function)
   "Set the function in FUNCTION-PLACE to FUNCTION."
-  (if (fboundp 'fdefinition)
-      ;; If we're conforming to CLtL2, use fdefinition here.
-      `(if (fboundp ,function-place)
-	   (setf (fdefinition ,function-place) ,function) 
-	   (eval '(setf ,function-place ',function)))
-      `(if (symbolp ,function-place)
-	   (setf (symbol-function ,function-place) ,function) 
-	   (eval '(setf ,function-place ',function)))))
-
-#|
-;;; before using fdefinition
-(defun PLACE-FUNCTION (function-place)
-  "Return the function found at FUNCTION-PLACE. Evals FUNCTION-PLACE
-if it isn't a symbol, to allow monitoring of closures located in
-variables/arrays/structures."
-  (if (symbolp function-place)
-      (symbol-function function-place)
-      (eval function-place)))
-
-(defsetf PLACE-FUNCTION (function-place) (function)
-  "Set the function in FUNCTION-PLACE to FUNCTION."
-  `(if (symbolp ,function-place)
-       (setf (symbol-function ,function-place) ,function)
+  `(if (fboundp ,function-place)
+       (setf (fdefinition ,function-place) ,function)
        (eval '(setf ,function-place ',function))))
-|#
 
 (defun PLACE-FBOUNDP (function-place)
   "Test to see if FUNCTION-PLACE is a function."
@@ -958,7 +913,7 @@ of an empty function many times."
   (stub-function nil)
   (monitor stub-function)
   (reset-all-monitoring)
-  (let ((overhead-function (symbol-function 'stub-function)))
+  (let ((overhead-function (fdefinition 'stub-function)))
     (dotimes (x overhead-iterations)
       (funcall overhead-function overhead-function)))
 ;  (dotimes (x overhead-iterations)
