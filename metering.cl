@@ -922,8 +922,8 @@ of an empty function many times."
     (multiple-value-bind (calls nested-calls time cons)
 	(monitor-info-values 'stub-function)
       (declare (ignore calls nested-calls))
-      (setq *monitor-time-overhead* (/ time fiter)
-	    *monitor-cons-overhead* (/ cons fiter))))
+      (setq *monitor-time-overhead* (truncate (/ time fiter))
+	    *monitor-cons-overhead* (truncate (/ cons fiter)))))
   (unmonitor stub-function))
 (set-monitor-overhead)
 
