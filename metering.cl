@@ -392,9 +392,6 @@ Estimated total monitoring overhead: 0.88 seconds
 (defmacro get-cons ()
   "The get-cons macro is called to find the total number of bytes
    consed since the beginning of time."
-;  #-:new-compiler
-;  '(ext:get-bytes-consed)
-;  #+:new-compiler
   '(the consing-type (ext:get-bytes-consed)))
 
 #+:clisp
@@ -435,63 +432,19 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; is the number of required arguments, and the second is T iff there are any
 ;;; non-required arguments (e.g. &optional, &rest, &key).
 #+cmu
-(progn
-  #-new-compiler
-  (defun required-arguments (name)
-    (let ((function (symbol-function name)))
-      (if (eql (system:%primitive get-type function) system:%function-type)
-	  (let ((min (ldb system:%function-min-args-byte
-			  (system:%primitive header-ref function
-					     system:%function-min-args-slot)))
-		(max (ldb system:%function-max-args-byte
-			  (system:%primitive header-ref function
-					     system:%function-max-args-slot)))
-		(rest (ldb system:%function-rest-arg-byte
-			   (system:%primitive header-ref function
-					      system:%function-rest-arg-slot)))
-		(key (ldb system:%function-keyword-arg-byte
-			  (system:%primitive
-			   header-ref function
-			   system:%function-keyword-arg-slot))))
-	    (values min (or (/= min max) (/= rest 0) (/= key 0))))
-	  (values 0 t))))
-
-  #| #+new-compiler
-  (defun required-arguments (name)
-    (let* ((function (symbol-function name))
-	   (stype (system:%primitive get-vector-subtype function)))
-      (if (eql stype system:%function-entry-subtype)
-	  (let* ((args (cadr (system:%primitive
-			      header-ref
-			      function
-			      system:%function-entry-type-slot)))
-		 (pos (position-if #'(lambda (x)
-				       (and (symbolp x)
-					    (let ((name (symbol-name x)))
-					      (and (>= (length name) 1)
-						   (char= (schar name 0)
-							  #\&)))))
-				   args)))
-	    (if pos
-		(values pos t)
-		(values (length args) nil)))
-	  (values 0 t)))))|#
-
-  #+new-compiler
-  (defun required-arguments (name)
-    (let ((type (ext:info function type name)))
-      (cond ((not (kernel:function-type-p type))
-	     (warn "No argument count information available for:~%  ~S~@
+(defun required-arguments (name)
+  (let ((type (ext:info function type name)))
+    (cond ((not (kernel:function-type-p type))
+	   (warn "No argument count information available for:~%  ~S~@
 		  Allow for &rest arg consing."
-		   name)
-	     (values 0 t))
-	    (t
-	     (values (length (kernel:function-type-required type))
-		     (if (or (kernel:function-type-optional type)
-			     (kernel:function-type-keyp type)
-			     (kernel:function-type-rest type))
-			 t nil))))))
-)
+		 name)
+	   (values 0 t))
+	  (t
+	   (values (length (kernel:function-type-required type))
+		   (if (or (kernel:function-type-optional type)
+			   (kernel:function-type-keyp type)
+			   (kernel:function-type-rest type))
+		       t nil))))))
 
 ;;; Allegro and Clozure Common Lisp
 #+(or allegro clozure)
@@ -673,21 +626,13 @@ variables/arrays/structures."
 ;;;
 (defstruct metering-functions
   (name nil)
-  (old-definition #-(and :cmu :new-compiler) nil
-		  #+(and :cmu :new-compiler) 
-		  (error "Missing required keyword argument :old-definition")
+  (old-definition (error "Missing required keyword argument :old-definition")
 		  :type function)
-  (new-definition #-(and :cmu :new-compiler) nil
-		  #+(and :cmu :new-compiler) 
-		  (error "Missing required keyword argument :new-definition")
+  (new-definition (error "Missing required keyword argument :new-definition")
 		  :type function)
-  (read-metering #-(and :cmu :new-compiler) nil
-		  #+(and :cmu :new-compiler) 
-		  (error "Missing required keyword argument :read-metering")
+  (read-metering  (error "Missing required keyword argument :read-metering")
 		  :type function)
-  (reset-metering #-(and :cmu :new-compiler) nil
-		  #+(and :cmu :new-compiler) 
-		  (error "Missing required keyword argument :reset-metering")
+  (reset-metering (error "Missing required keyword argument :reset-metering")
 		  :type function))
 
 ;;; In general using hash tables in time-critical programs is a bad idea,
