@@ -387,37 +387,39 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; The get-cons macro is called to find the total number of bytes
 ;;; consed since the beginning of time.
 
-#+:cmu
-(defmacro get-cons ()
-  "The get-cons macro is called to find the total number of bytes
+(eval-when (compile load eval)
+  #+cmu
+  (defmacro get-cons ()
+    "The get-cons macro is called to find the total number of bytes
    consed since the beginning of time."
-  '(the consing-type (ext:get-bytes-consed)))
+    '(the consing-type (ext:get-bytes-consed)))
 
-#+:clisp
-(defun get-cons ()
-  (multiple-value-bind (real1 real2 run1 run2 gc1 gc2 space1 space2 gccount)
-      (sys::%%time)
-    (declare (ignore real1 real2 run1 run2 gc1 gc2 gccount))
-    (dpb space1 (byte 24 24) space2)))
+  #+clisp
+  (defmacro get-cons ()
+    `(the consing-type
+	  (multiple-value-bind (real1 real2 run1 run2 gc1 gc2 space1 space2 gccount)
+	      (sys::%%time)
+	    (declare (ignore real1 real2 run1 run2 gc1 gc2 gccount))
+	    (dpb space1 (byte 24 24) space2))))
 
-;;; Clozure Common Lisp
-;;; Note that this includes bytes that were allocated during GC.  We
-;;; could subtract this out by advising GC, but I'd rather users ran
-;;; without GC. If they can't run without GC, then the bytes consed
-;;; during GC are a cost of running their program. Metering the code a
-;;; few times will avoid the consing values being too lopsided. If a
-;;; user really really wants to subtract out the consing during GC,
-;;; replace the following two lines with the commented out code.
-#+:clozure
-(defmacro get-cons () `(the consing-type (ccl::total-bytes-allocated)))
+  #+clozure
+  (defmacro get-cons ()
+    `(the consing-type (ccl::total-bytes-allocated))))
 
-#-(or :cmu :clisp :clozure)
-(progn
-  (eval-when (compile eval)
-    (warn "No consing will be reported unless a get-cons function is ~
+(eval-when (compile load)
+  #+ecl
+  (defmacro get-cons ()
+    `(the consing-type (ffi:c-inline () () :object
+			 "ecl_make_unsigned_integer(GC_get_total_bytes())"
+			 :one-liner t))))
+
+(eval-when (compile load eval)
+  (unless (fboundp 'get-cons)
+    (eval-when (compile eval)
+      (warn "No consing will be reported unless a get-cons function is ~
            defined."))
 
-  (defmacro get-cons () '(the consing-type 0)))
+    (defmacro get-cons () '(the consing-type 0))))
 
 ;;; ********************************
 ;;; Required Arguments *************
