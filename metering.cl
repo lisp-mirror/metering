@@ -387,24 +387,32 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; The get-cons macro is called to find the total number of bytes
 ;;; consed since the beginning of time.
 
-(eval-when (compile load eval)
-  #+cmu
-  (defmacro get-cons ()
-    "The get-cons macro is called to find the total number of bytes
+#+cmu
+(defmacro get-cons ()
+  "The get-cons macro is called to find the total number of bytes
    consed since the beginning of time."
-    '(the consing-type (ext:get-bytes-consed)))
+  '(the consing-type (ext:get-bytes-consed)))
 
-  #+clisp
-  (defmacro get-cons ()
-    `(the consing-type
-	  (multiple-value-bind (real1 real2 run1 run2 gc1 gc2 space1 space2 gccount)
-	      (sys::%%time)
-	    (declare (ignore real1 real2 run1 run2 gc1 gc2 gccount))
-	    (dpb space1 (byte 24 24) space2))))
+#+clisp
+(defmacro get-cons ()
+  `(the consing-type
+	(multiple-value-bind (real1 real2 run1 run2 gc1 gc2 space1 space2 gccount)
+	    (sys::%%time)
+	  (declare (ignore real1 real2 run1 run2 gc1 gc2 gccount))
+	  (dpb space1 (byte 24 24) space2))))
 
-  #+clozure
+#+clozure
+(defmacro get-cons ()
+  `(the consing-type (ccl::total-bytes-allocated)))
+
+#+ecl
+;; ECL has to compile the inlined C-code, otherwise it gets the generic
+;; definition.
+(eval-when (eval)
+  (warn "No consing will be reported unless the package is compiled.")
   (defmacro get-cons ()
-    `(the consing-type (ccl::total-bytes-allocated))))
+    (defmacro get-cons ()
+      '(the consing-type 0))))
 
 #+ecl
 ;; ECL has to compile the inlined C-code, otherwise it gets the generic
@@ -415,12 +423,13 @@ Estimated total monitoring overhead: 0.88 seconds
 			 "ecl_make_unsigned_integer(GC_get_total_bytes())"
 			 :one-liner t))))
 
-(eval-when (compile load eval)
-  (unless (fboundp 'get-cons)
-    (eval-when (compile eval)
-      (warn "No consing will be reported unless a get-cons function is ~
+#-(or cmu clisp clozure ecl)
+(progn
+  (eval-when (compile eval)
+    (warn "No consing will be reported unless a get-cons function is ~
            defined."))
 
+  (eval-when (load eval)
     (defmacro get-cons () '(the consing-type 0))))
 
 ;;; ********************************
