@@ -700,6 +700,9 @@ adjusted for overhead."
 	 (setf (place-function name)
 	       #'(lambda (,@required-args
 			  ,@(when optionals-p `(&rest optional-args)))
+		   ,(when optionals-p
+			  ;; &rest optional-args can be stack allocated
+			  `(declare (dynamic-extent optional-args)))
 		   (let ((prev-total-time *total-time*)
 			 (prev-total-cons *total-cons*)
 			 (prev-total-calls *total-calls*)
