@@ -1,6 +1,5 @@
 ;;; -*- Mode: LISP; Package: monitor; Syntax: Common-lisp; Base: 10.;  -*- 
-;;; Tue Jan 25 18:32:28 1994 by Mark Kantrowitz <mkant@GLINDA.OZ.CS.CMU.EDU>
-;;; metering.cl -- 56711 bytes
+;;; metering.cl
 
 ;;; ****************************************************************
 ;;; Metering System ************************************************
@@ -13,6 +12,7 @@
 ;;; The Metering System is a combination of 
 ;;;   o  the Monitor package written by Chris McConnell
 ;;;   o  the Profile package written by Skef Wholey and Rob MacLachlan
+;;; 
 ;;; The two systems were merged and extended by Mark Kantrowitz.
 ;;; Metering System was refreshed and adaptated to the 2016 realities
 ;;; by Daniel Kochmański.
@@ -90,16 +90,14 @@
 ;;; Documentation **************************************************
 ;;; ****************************************************************
 ;;;
-;;; This system runs in any valid Common Lisp. Four small 
+;;; This system runs in any valid Common Lisp. Two small
 ;;; implementation-dependent changes can be made to improve performance
 ;;; and prettiness. In the section labelled "Implementation Dependent
 ;;; Changes" below, you should tailor the functions REQUIRED-ARGUMENTS,
-;;; GET-CONS, GET-TIME, and TIME-UNITS-PER-SECOND to your implementation
-;;; for the best results. If GET-CONS is not specified for your 
-;;; implementation, no consing information will be reported. The other
-;;; functions will default to working forms, albeit inefficient, in
-;;; non-CMU implementations. If you tailor these functions for a particular
-;;; version of Common Lisp, we'd appreciate receiving the code.
+;;; GET-CONS to your implementation for the best results. If GET-CONS is
+;;; not specified for your implementation, no consing information will be
+;;; reported. If you tailor these functions for a particular version of
+;;; Common Lisp, we'd appreciate receiving the code.
 ;;;
 
 ;;; ****************************************************************
@@ -123,6 +121,7 @@
 ;;;         your-forms*)
 ;;; or                      
 ;;;     (mon:monitor-form your-form)
+;;; 
 ;;; The former allows you to specify which functions will be monitored; the
 ;;; latter monitors all functions in the current package. Both automatically
 ;;; produce a table of statistics. Other variants can be constructed from
@@ -180,16 +179,6 @@
 ;;;    - Garbage collection.  Try turning it off, then running your code.
 ;;;      Be warned that monitoring code will probably cons when it does
 ;;;      (get-internal-run-time).
-;;;    - Swapping.  If you have enough memory, execute your form once
-;;;      before monitoring so that it will be swapped into memory. Otherwise,
-;;;      get a bigger machine! 
-;;;    - Resolution of internal-time-units-per-second.  If this value is
-;;;      too low, then the timings become wild. You can try executing more
-;;;      of whatever your test is, but that will only work if some of your
-;;;      paths do not match the timer resolution. 
-;;;      internal-time-units-per-second is so coarse -- on a Symbolics it is
-;;;      977, in MACL it is 60.
-;;;
 ;;;
 
 ;;; ****************************************************************
