@@ -73,6 +73,27 @@ daniel@turtleware.eu.
      - LispWorks
      - mocl
 
+   XCL and GCL won't work, if system is loaded with ASDF.
+
+   GCL has to first load the file, then compile it and load
+   the compiled before:
+   #+BEGIN_SRC lisp
+     (load "metering.cl") ; GCL's issue
+     (compile-file "metering.cl")
+     (load *)
+   #+END_SRC
+
+   METERING may be load with ASDF or by compiling and
+   loading file:
+   #+BEGIN_SRC lisp
+     #-asdf
+     (load (compile-file "metering.cl"))
+
+     ,#+asdf
+     (load "metering.asd")
+     (asdf:load-system 'metering)
+   #+END_SRC
+
 
 ** Documentation
 
