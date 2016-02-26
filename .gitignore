@@ -1,3 +1,5 @@
+*~
+*.xcl
 *.abcl
 *.lib
 *.o
