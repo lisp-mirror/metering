@@ -49,7 +49,7 @@ daniel@turtleware.eu.
    - Add option to record caller statistics -- this would list who
      called which functions and how often.
    - Switches to turn timing/CONSING statistics collection on/off.
-   - Additional tests
+   - Additional tests.
 
 ** Notes
 
