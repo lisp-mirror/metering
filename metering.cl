@@ -14,8 +14,9 @@
 ;;;   o  the Profile package written by Skef Wholey and Rob MacLachlan
 ;;; 
 ;;; The two systems were merged and extended by Mark Kantrowitz.
-;;; Metering System was refreshed and adaptated to the 2016 realities
-;;; by Daniel Kochmański.
+
+;;; Metering System was refreshed and adapted to the 2016 realities by
+;;; Daniel Kochmański.
 ;;; 
 ;;; This code is in the public domain and is distributed without warranty
 ;;; of any kind. 
@@ -55,7 +56,7 @@
 ;;; 01-JAN-93 mk  v2.0  Support for MCL 2.0, CMU CL 16d, Allegro V3.1/4.0/4.1, 
 ;;;                     Lucid 4.0, ibcl
 ;;; 25-JAN-94 mk  v2.1  Patches for CLISP from Bruno Haible.
-;;; 13-MAR-16 dk  v3.0  General clean-up - removal of the obsolete
+;;; 26-FEB-16 dk  v3.0  General clean-up - removal of the obsolete
 ;;;                     implementations support and constructs, testing on
 ;;;                     the active implementations etc.
 ;;;
@@ -81,10 +82,20 @@
 ;;; ********************************
 ;;;
 ;;;    METERING has been tested (successfully) in the following lisps:
-;;;       CLISP (January 1994)
+;;;       ABCL   1.3.3       (Feb 2016)
+;;;       CCL    1.11        (Feb 2016)
+;;;       CMUCL  21a         (Feb 2016)
+;;;       CLISP  2.49        (Feb 2016)
+;;;       ECL    16.1.2      (Feb 2016)
+;;;       GCL    2.6.13-pre  (Feb 2016)
+;;;       SBCL   1.3.2       (Feb 2016)
+;;;       XCL    0.0.0.291   (Feb 2016) /unstable/
 ;;;
 ;;;    METERING needs to be tested in the following lisps:
-;;;       CLISP (2.49+)
+;;;       Allegro
+;;;       LispWorks
+;;;       mocl
+;;;
 
 ;;; ****************************************************************
 ;;; Documentation **************************************************
@@ -336,7 +347,7 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; Version ************************
 ;;; ********************************
 
-(defparameter *metering-version* "v3.0 13-MAR-16"
+(defparameter *metering-version* "v3.0 2016-03-26"
   "Current version number/date for Metering.")
 
 
@@ -348,6 +359,7 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; Hacks for non-conforming CL ****
 ;;; ********************************
 
+#-(or clisp)
 (eval-when (compile load eval)
   (unless (fboundp 'fdefinition)
 
