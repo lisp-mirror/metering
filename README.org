@@ -22,36 +22,22 @@ daniel@turtleware.eu.
 
 
 ** Change Log
-
-- 26-JUN-90  mk ::  Merged functionality of Monitor and Profile packages.
-- 26-JUN-90  mk ::  Now handles both inclusive and exclusive statistics with
-     respect to nested calls. (Allows it to subtract total monitoring
-     overhead for each function, not just the time spent monitoring the
-     function itself.)
-- 26-JUN-90  mk ::  The table is now saved so that one may manipulate the
-     data (sorting it, etc.) even after the original source of the data has
-     been cleared.
-- 25-SEP-90  mk ::  Added get-cons functions for Lucid 3.0, MACL 1.3.2
-     required-arguments functions for Lucid 3.0, Franz Allegro CL, and MACL
-     1.3.2.
-- 25-JAN-91  mk ::  Now uses fdefinition if available.
-- 25-JAN-91  mk ::  Replaced (and :allegro (not :coral)) with :excl.  Much
-     better solution for the fact that both call themselves :allegro.
-- 5-JUL-91 mk   ::  Fixed warning to occur only when file is loaded
-     uncompiled.
-- 5-JUL-91 mk   ::  When many unmonitored functions, print out number
-     instead of whole list.
-- 24-MAR-92 mk  ::  Updated for CLtL2 compatibility. space measuring doesn't
-     work in MCL, but fixed so that timing statistics do.
-- 26-MAR-92 mk  :: Updated for Lispworks. Replaced :ccl with (and :ccl (not
-     :lispworks)).
-- 27-MAR-92 mk  :: Added get-cons for Allegro-V4.0.
-- 01-JAN-93 mk  v2.0 :: Support for MCL 2.0, CMU CL 16d, Allegro
-     V3.1/4.0/4.1, Lucid 4.0, ibcl
-- 25-JAN-94 mk  v2.1 :: Patches for CLISP from Bruno Haible.
-- 26-FEB-16 dk  v3.0 :: General clean-up - removal of the obsolete
-     implementations support and constructs, testing on the active
-     implementations etc.
+| Date      | Name | Ver | Notes                                                                                                                                                                                                          |
+|-----------+------+-----+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 26-JUN-90 | mk   |     | Merged functionality of Monitor and Profile packages.                                                                                                                                                          |
+| 26-JUN-90 | mk   |     | Now handles both inclusive and exclusive statistics with respect to nested calls. (Allows it to subtract total monitoring overhead for each function, not just the time spent monitoring the function itself.) |
+| 26-JUN-90 | mk   |     | The table is now saved so that one may manipulate the data (sorting it, etc.) even after the original source of the data has been cleared.                                                                     |
+| 25-SEP-90 | mk   |     | Added get-cons functions for Lucid 3.0, MACL 1.3.2 required-arguments functions for Lucid 3.0, Franz Allegro CL, and MACL 1.3.2.                                                                               |
+| 25-JAN-91 | mk   |     | Now uses fdefinition if available.                                                                                                                                                                             |
+| 25-JAN-91 | mk   |     | Replaced (and :allegro (not :coral)) with :excl.  Much better solution for the fact that both call themselves :allegro.                                                                                        |
+| 5-JUL-91  | mk   |     | Fixed warning to occur only when file is loaded uncompiled.                                                                                                                                                    |
+| 5-JUL-91  | mk   |     | When many unmonitored functions, print out number instead of whole list.                                                                                                                                       |
+| 24-MAR-92 | mk   |     | Updated for CLtL2 compatibility. space measuring doesn't work in MCL, but fixed so that timing statistics do.                                                                                                  |
+| 26-MAR-92 | mk   |     | Updated for Lispworks. Replaced :ccl with (and :ccl (not :lispworks)).                                                                                                                                         |
+| 27-MAR-92 | mk   |     | Added get-cons for Allegro-V4.0.                                                                                                                                                                               |
+| 01-JAN-93 | mk   | 2.0 | Support for MCL 2.0, CMU CL 16d, Allegro V3.1/4.0/4.1, Lucid 4.0, ibcl                                                                                                                                         |
+| 25-JAN-94 | mk   | 2.1 | Patches for CLISP from Bruno Haible.                                                                                                                                                                           |
+| 26-FEB-16 | dk   | 3.0 | General clean-up - removal of the obsolete implementations support and constructs, testing on the active implementations etc.                                                                                  |
 
 
 ** To Do
