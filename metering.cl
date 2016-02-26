@@ -32,13 +32,13 @@
 
 ;;; Warn user if they're loading the source instead of compiling it first.
 (eval-when (eval)
-   (warn "This file should be compiled before loading for best results."))
+  (warn "This file should be compiled before loading for best results."))
 
 ;;; ********************************
 ;;; Version ************************
 ;;; ********************************
 
-(defparameter *metering-version* "v3.0 2016-03-26"
+(defparameter *metering-version* "v3.1 2016-03-26"
   "Current version number/date for Metering.")
 
 
@@ -54,7 +54,7 @@
 (eval-when (compile load eval)
   (unless (fboundp 'fdefinition)
 
-    (eval-when (compile eval)
+    (eval-when (load eval)
       (warn "This is not ANSI conforming Common Lisp. Expect problems."))
 
     (defun fdefinition (symbol)
@@ -127,13 +127,10 @@
                          :one-liner t))))
 
 #-(or cmu clisp clozure ecl)
-(progn
-  (eval-when (compile eval)
-    (warn "No consing will be reported unless a get-cons function is ~
-           defined."))
-
-  (eval-when (load eval)
-    (defmacro get-cons () '(the consing-type 0))))
+(eval-when (load eval)
+  (warn "No consing will be reported unless a get-cons function is ~
+           defined.")
+  (defmacro get-cons () '(the consing-type 0)))
 
 ;;; ********************************
 ;;; Required Arguments *************
@@ -206,14 +203,13 @@
       (T (values 0 t)))))
 
 #-(or cmu clisp clozure allegro)
-(progn
-  (eval-when (compile eval)
-    (warn
-     "You may want to add an implementation-specific Required-Arguments function."))
-  (eval-when (load eval)
-    (defun required-arguments (name)
-      (declare (ignore name))
-      (values 0 t))))
+(eval-when (load eval)
+  (warn
+   "You may want to add an implementation-specific Required-Arguments ~
+     function.")
+  (defun required-arguments (name)
+    (declare (ignore name))
+    (values 0 t)))
 
 #|
 ;;;Examples

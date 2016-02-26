@@ -38,6 +38,7 @@ daniel@turtleware.eu.
 | 01-JAN-93 | mk   | 2.0 | Support for MCL 2.0, CMU CL 16d, Allegro V3.1/4.0/4.1, Lucid 4.0, ibcl                                                                                                                                         |
 | 25-JAN-94 | mk   | 2.1 | Patches for CLISP from Bruno Haible.                                                                                                                                                                           |
 | 26-FEB-16 | dk   | 3.0 | General clean-up - removal of the obsolete implementations support and constructs, testing on the active implementations etc.                                                                                  |
+| 26-FEB-16 | dk   | 3.1 | Make warnings more ASDF-friendly                                                                                                                                                                               |
 
 
 ** To Do
