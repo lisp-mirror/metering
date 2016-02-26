@@ -375,17 +375,11 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; the beginning of time. time-units-per-second allows us to convert units
 ;;; to seconds.
 
-(progn
-  #-(or :cmu :clisp :clozure :allegro)
-  (eval-when (compile eval)
-    (warn
-     "You may want to supply implementation-specific get-time functions."))
+(defconstant time-units-per-second internal-time-units-per-second)
 
-  (defconstant time-units-per-second internal-time-units-per-second)
-  
-  (defmacro get-time ()
-    `(the time-type (get-internal-run-time)))
-)
+(defmacro get-time ()
+  `(the time-type (get-internal-run-time)))
+
 
 ;;; ********************************
 ;;; Consing Functions **************
