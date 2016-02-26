@@ -345,6 +345,22 @@ Estimated total monitoring overhead: 0.88 seconds
 ;;; ****************************************************************
 
 ;;; ********************************
+;;; Hacks for non-conforming CL ****
+;;; ********************************
+
+(eval-when (compile load eval)
+  (unless (fboundp 'fdefinition)
+
+    (eval-when (compile eval)
+      (warn "This is not ANSI conforming Common Lisp. Expect problems."))
+
+    (defun fdefinition (symbol)
+      (symbol-function symbol))
+
+    (defsetf fdefinition (name) (new-definition)
+      `(setf (symbol-function ,name) ,new-definition))))
+
+;;; ********************************
 ;;; Type Definitions ***************
 ;;; ********************************
 
