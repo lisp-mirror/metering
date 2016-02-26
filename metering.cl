@@ -451,8 +451,8 @@ Estimated total monitoring overhead: 0.88 seconds
 #+(or allegro clozure)
 (defun required-arguments (name)
   (let* ((function (fdefinition name))
-         (args #+:allegro(excl::arglist function)
-	       #+:clozure(ccl:arglist function))
+         (args #+allegro(excl::arglist function)
+	       #+clozure(ccl:arglist function))
          (pos (position-if #'(lambda (x)
                                (and (symbolp x)
                                     (let ((name (symbol-name x)))
@@ -464,7 +464,7 @@ Estimated total monitoring overhead: 0.88 seconds
         (values pos t)
       (values (length args) nil))))
 
-#+:clisp
+#+clisp
 (defun required-arguments (name)
   (let ((function (fdefinition name)))
     (case (type-of function)
@@ -491,7 +491,7 @@ Estimated total monitoring overhead: 0.88 seconds
 	     (values 0 t))))
       (T (values 0 t)))))
 
-#-(or :cmu :clisp :clozure :allegro)
+#-(or cmu clisp clozure allegro)
 (progn
   (eval-when (compile eval)
     (warn
