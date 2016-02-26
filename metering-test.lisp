@@ -1,6 +1,6 @@
 ;;; Ensure the package
 (defpackage #:metering/test
-  (:use #:cl #:5am #:mon))
+  (:use #:cl #:5am))
 (in-package #:metering/test)
 
 ;;; Ensure the suite
@@ -25,11 +25,12 @@
 (test monitor-null
   "Check if adding non-existant function doesn't change the list of
 monitored functions"
-  (is (equal (monitor nil)
-	     (monitor xyz))))
+  (is (equal (mon:monitor nil)
+	     (mon:monitor xyz))))
 
 (test with-monitoring
   "Monitor two functions"
-  (finishes (with-monitoring (test-fun-1 test-fun-2) ()
-	      (test-fun-1)
-	      (test-fun-2 1))))
+  (finishes (mon:with-monitoring (test-fun-1 test-fun-2) ()
+	      (dotimes (v 1001)
+		(test-fun-1)
+		(test-fun-2 1)))))
