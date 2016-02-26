@@ -73,7 +73,7 @@ daniel@turtleware.eu.
      - LispWorks
      - mocl
 
-   XCL and GCL won't work, if system is loaded with ASDF.
+   On XCL and GCL loading system with ASDF won't work.
 
    GCL has to first load the file, then compile it and load
    the compiled before:
