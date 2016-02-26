@@ -4,7 +4,7 @@ Name:         Metering
 
 Summary:      Portable Code Profiling Tool
 
-Version:      v2.1 (25-JAN-94)
+Version:      v3.0 (2016-02-26)
 
 Description: 
 
@@ -29,11 +29,13 @@ Updated:
 
 CD-ROM:       Prime Time Freeware for AI, Issue 1-1
 
-Bug Reports:  lisp-utilities-request@cs.cmu.edu
+Bug Reports:  
 
-Mailing List: lisp-utilities-request@cs.cmu.edu
+Mailing List: 
 
 Author(s):    Mark Kantrowitz <mkant@cs.cmu.edu>
+
+Maintainer:   Daniel Kochmański <daniel@turtleware.eu>
 
 Contact:      
 
@@ -42,7 +44,7 @@ Keywords:
    Lisp!Tools, Metering, Profiler, Authors!Kantrowitz, Time Measurement, 
    Code Profiler, Space Usage Measurement, CMU, Public Domain
 
-Contains:    ???
+Contains:    
 
 See Also:    
 
