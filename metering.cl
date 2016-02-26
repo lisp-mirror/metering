@@ -406,8 +406,10 @@ Estimated total monitoring overhead: 0.88 seconds
   (defmacro get-cons ()
     `(the consing-type (ccl::total-bytes-allocated))))
 
+#+ecl
+;; ECL has to compile the inlined C-code, otherwise it gets the generic
+;; definition.
 (eval-when (compile load)
-  #+ecl
   (defmacro get-cons ()
     `(the consing-type (ffi:c-inline () () :object
 			 "ecl_make_unsigned_integer(GC_get_total_bytes())"
