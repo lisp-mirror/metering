@@ -1,5 +1,4 @@
-
-* Metering System
+* The Metering System
 
 The Metering System is a portable Common Lisp code profiling tool.
 It gathers timing and consing statistics for specified functions 
