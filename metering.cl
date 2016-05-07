@@ -126,7 +126,11 @@
                          "ecl_make_unsigned_integer(GC_get_total_bytes())"
                          :one-liner t))))
 
-#-(or cmu clisp clozure ecl)
+#+sbcl
+(defmacro get-cons ()
+  `(the consing-type (sb-ext:get-bytes-consed)))
+
+#-(or cmu clisp clozure ecl sbcl)
 (eval-when (load eval)
   (warn "No consing will be reported unless a get-cons function is ~
            defined.")
