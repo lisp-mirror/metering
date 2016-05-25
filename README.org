@@ -38,6 +38,7 @@ daniel@turtleware.eu.
 | 25-JAN-94 | mk   | 2.1 | Patches for CLISP from Bruno Haible.                                                                                                                                                                           |
 | 26-FEB-16 | dk   | 3.0 | General clean-up - removal of the obsolete implementations support and constructs, testing on the active implementations etc.                                                                                  |
 | 26-FEB-16 | dk   | 3.1 | Make warnings more ASDF-friendly                                                                                                                                                                               |
+| 25-MAY-16 | dk   | 3.2 | Improve the documentation (document ignore-no-calls parameter)                                                                                                                                                 |
 
 
 ** To Do
@@ -248,6 +249,7 @@ REPORT-MONITORING &optional names                         [Function]
                             (nested :exclusive) 
                             (threshold 0.01)
                             (key :percent-time)
+                            ignore-no-calls
 Creates a table of monitoring information for the specified list
 of names, and displays the table using display-monitoring-results.
 If names is :all or nil, uses all currently monitored functions.
@@ -277,9 +279,12 @@ Takes the following arguments:
         :cons-per-call  by average consing per function
         :time           same as :percent-time
         :cons           same as :percent-cons
+   - IGNORE-NO-CALLS specifies whenever functions which were not
+     called should be reported.
 
 DISPLAY-MONITORING-RESULTS &optional (threshold 0.01)     [Function]
                                      (key :percent-time)
+                                     (ignore-no-calls t)
 Prints a table showing for each named function:
    - the total CPU time used in that function for all calls
    - the total number of bytes consed in that function for all calls

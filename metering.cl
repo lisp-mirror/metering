@@ -38,7 +38,7 @@
 ;;; Version ************************
 ;;; ********************************
 
-(defparameter *metering-version* "v3.1 2016-03-26"
+(defparameter *metering-version* "v3.2 2016-05-25"
   "Current version number/date for Metering.")
 
 
@@ -728,8 +728,10 @@ below THRESHOLD % of the time will not be reported."
                         *monitor-results*))))
           (display-monitoring-results threshold key ignore-no-calls)))))
 
-(defun display-monitoring-results (&optional (threshold 0.01) (key :percent-time)
-                                             (ignore-no-calls t))
+(defun display-monitoring-results (&optional
+                                     (threshold 0.01)
+                                     (key :percent-time)
+                                     (ignore-no-calls t))
   (let ((max-length 8)                  ; Function header size
         (total-time 0.0)
         (total-consed 0)
