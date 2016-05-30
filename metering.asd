@@ -2,7 +2,7 @@
 
 (asdf:defsystem #:metering
   :name "Metering"
-  :version "3.0"
+  :version "3.2"
   :description "Portable Code Profiling Tool"
   :author "Mark Kantrowitz <mkant@cs.cmu.edu>"
   :maintainer "Daniel Kochmański <daniel@turtleware.eu>"
