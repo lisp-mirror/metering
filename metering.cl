@@ -109,22 +109,8 @@
   `(the consing-type (ccl::total-bytes-allocated)))
 
 #+ecl
-;; ECL has to compile the inlined C-code, otherwise it gets the generic
-;; definition.
-(eval-when (eval)
-  (warn "No consing will be reported unless the package is compiled.")
-  (defmacro get-cons ()
-    (defmacro get-cons ()
-      '(the consing-type 0))))
-
-#+ecl
-;; ECL has to compile the inlined C-code, otherwise it gets the generic
-;; definition.
-(eval-when (compile load)
-  (defmacro get-cons ()
-    `(the consing-type (ffi:c-inline () () :object
-                         "ecl_make_unsigned_integer(GC_get_total_bytes())"
-                         :one-liner t))))
+(defmacro get-cons ()
+  `(the consing-type (si:gc-stats nil)))
 
 #+sbcl
 (defmacro get-cons ()
