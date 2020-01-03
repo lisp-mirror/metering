@@ -116,7 +116,11 @@
 (defmacro get-cons ()
   `(the consing-type (sb-ext:get-bytes-consed)))
 
-#-(or cmu clisp clozure ecl sbcl)
+#+clasp
+(defmacro get-cons ()
+  `(the consing-type (gctools::bytes-allocated)))
+
+#-(or cmu clisp clozure ecl sbcl clasp)
 (eval-when (load eval)
   (warn "No consing will be reported unless a get-cons function is ~
            defined.")
@@ -192,7 +196,25 @@
              (values 0 t))))
       (T (values 0 t)))))
 
-#-(or cmu clisp clozure allegro)
+#+clasp
+(defun required-arguments (name)
+  (multiple-value-bind (arglist foundp)
+      (core:function-lambda-list name)
+    (if foundp
+        (let ((position-and 
+               (position-if #'(lambda (x)
+                                (and (symbolp x)
+                                     (let ((name (symbol-name x)))
+                                       (and (>= (length name) 1)
+                                            (char= (schar name 0)
+                                                   #\&)))))
+                            arglist)))
+          (if position-and
+              (values position-and t)
+              (values (length arglist) nil)))
+        (values 0 t))))
+    
+#-(or cmu clisp clozure allegro clasp)
 (eval-when (load eval)
   (warn
    "You may want to add an implementation-specific Required-Arguments ~
