@@ -39,6 +39,7 @@ daniel@turtleware.eu.
 | 26-FEB-16 | dk   | 3.0 | General clean-up - removal of the obsolete implementations support and constructs, testing on the active implementations etc.                                                                                  |
 | 26-FEB-16 | dk   | 3.1 | Make warnings more ASDF-friendly                                                                                                                                                                               |
 | 25-MAY-16 | dk   | 3.2 | Improve the documentation (document ignore-no-calls parameter)                                                                                                                                                 |
+| 02-JAN-20 |kpoeck| 3.2 | Add clasp support                                                                                                                                                                                              |
 
 
 ** To Do
@@ -61,6 +62,7 @@ daniel@turtleware.eu.
    | ABCL  |      1.3.3 | Feb 2016     |                           |
    | CCL   |       1.11 | Feb 2016     |                           |
    | CMUCL |        21a | Feb 2016     |                           |
+   | CLASP | 0.4.2-1761 | Jan 2020     |                           |
    | CLISP |       2.49 | Feb 2016     |                           |
    | ECL   |     16.1.2 | Feb 2016     |                           |
    | GCL   | 2.6.13-pre | Feb 2016     |                           |
